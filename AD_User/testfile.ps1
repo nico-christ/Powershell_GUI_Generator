@@ -294,141 +294,38 @@ function Get-BoolFromCheckBox {
     return $bool
 }
 
-
 #----------------------- create form ---------------------------------------------
-$form = Create-Form -Title "New AD User" -Name "ADUserGUI" -FormWidth 1000 -FormHeight 850
-$form.ShowDialog()
+$form = Create-Form -Title "New AD User" -Name "ADUserGUI" -StartPosition "CenterScreen"
+
 
 #------------------------- edit form -------------------------------------------------
 $form.BackColor = "#ebebeb"
 
+$GivenNameLabel = Create-Label -Content "First Name" -Width 80 -Height 20 -PosX 20 -PosY 20
+$GivenNameTextBox = Create-TextBox -Name "GivenNameTextBox" -Content "Some text..." -Width 200 -Height 60 -PosX 20 -PosY 40
 
-#---------------------- create Groupboxes ----------------------------------------
-$groupBoxGeneral = Create-GroupBox -Title "General" -Width 400 -Height //TODO -PosX 20 -PosY 20# GroupBox um den Allgemein Tab ein zugeben
-$groupBoxAddress = Create-GroupBox -Title "Address" -Width 400 -Height //TODO -PosX //TODO -PosY //TODO# GroupBox um den Adress Tab ein zu geben
-$groupBoxAccount = Create-GroupBox -Title "Account" -Width 400 -Height //TODO -PosX //TODO -PosY //TODO# GroupBox um den Konto Tab ein zu geben
-$groupBoxAccountOptions = Create-GroupBox -Title "Account Options" -Width 380 -Height //TODO -PosX //TODO -PosY //TODO# GroupBox um die Konto Optionen ein zu geben
-$groupBoxPassword = Create-GroupBox -Title "Password" -Width 400 -Height //TODO -PosX //TODO -PosY //TODO# GroupBox um den Passwort Tab ein zu geben
-#$groupBoxMiscellaneous = Create-GroupBox -Title "Miscellaneous" # GroupBox um Verschiedenes ein zu geben
-$groupBoxControls = Create-GroupBox -Width 830 -Height 30 -PosX 10 -PosY 970
+$form.Controls.Add($GivenNameLabel)
+$form.Controls.Add($GivenNameTextBox)
 
-#------------------------------ create tab general -----------------------------------
-$form.Controls.Add($groupBoxGeneral)
-
-$GivenNameLabel = Create-Label -Content "First Name"
-$GivenNameTextBox = Create-TextBox -Name "GivenNameTextBox"
-
-$SurnameLabel = Create-Label -Content "Surname"
-$SurnameTextBox = Create-TextBox -Name "SurnameTextBox"
-
-$InitialsLabel = Create-Label -Content "Initials"
-$InitialsTextBox = Create-TextBox -Name "InitialsTextBox"
-
-$NameLabel = Create-Label -Content "Username"
-$NameTextBox = Create-TextBox -Name "NameTextBox"
-
-$DisplayNameLabel = Create-Label -Content "Display Name"
-$DisplayNameTextBox = Create-TextBox -Name "DisplayNameTextBox"
-
-$DiscriptionLabel = Create-Label -Content "Discription"
-$DiscriptionTextBox = Create-TextBox -Name "DiscriptionTextBox"
-
-$OfficeLabel = = Create-Label -Content "Office"
-$OfficeComboBox = Create-DropdownList -Name "OfficeComboBox"
-
-$OfficePhoneLabel = = Create-Label -Content "Office Phone"
-$OfficePhoneTextBox = Create-TextBox -Name "OfficePhoneTextBox"
-
-$EmailAdressLabel = Create-Label -Content "Email"
-$EmailAdressTextBox = Create-TextBox -Name "EmailAdressTextBox"
-
-$HomepageLabel = Create-Label -Content "Website"
-$HomepageTextBox = Create-TextBox -Name "HomepageTextBox"
-
-$groupBoxGeneral.Controls.AddRange @{$GivenNameLabel, $GivenNameTextBox, $SurnameLabel, $SurnameTextBox, $DisplayNameLabel, $DisplayNameTextBox, $OfficeLabel, $OfficeComboBox, $OfficePhoneLabel, $OfficePhoneTextBox, $EmailAdressLabel, $EmailAdressTextBox, $HomepageLabel, $HomepageTextBox}
-
-
-#------------------------------------ create tab address----------------------------------------------------------------------------
-$form.Controls.Add($groupBoxAddress)
-
-$StreetAddressLabel = Create-Label -Content "Street Address"
-$StreetAddressTextBox = Create-TextBox -Name "StreetAddressTextBox"
-
-$POBoxLabel = Create-Label -Content "Post Box"
-$POBoxTextBox = Create-TextBox -Name "POBoxTextBox"
-
-$CityLabel = Create-Label -Content "City"
-$CityTextBox = Create-TextBox -Name "CityTextBox"
-
-$StateLabel = Create-Label -Content "State"
-$StateTextBox = Create-TextBox -Name "StateTextBox"
-
-$PostalCodeLabel = Create-Label -Content "Postal Code"
-$PostalCodeTextBox = Create-TextBox -Name "PostalCodeTextBox"
-
-$CountryLabel = Create-Label -Content "Country"
-$CountryComboBox = Create-DropdownList -Name "CountryComboBox"
-
-$groupBoxAddress.Controls.AddRange @{$StreetAddressLabel, $StreetAddressTextBox, $POBoxLabel, $POBoxTextBox, $CityLabel, $CityTextBox, $StateLabel, $StateTextBox, $PostalCodeLabel, $PostalCodeTextBox, $CountryLabel, $CountryComboBox}
-
-
-
-#---------------------------------- create tab account ------------------------------------------------------------------------------------
-$form.Controls.Add($groupBoxAccount)
-$UserPrincipal = Create-Label -Content "Login Name Domain" #username
-$UserPrincipalNameTextBox = Create-TextBox -Name "UserPrincipalNameTextBox"
-
-$groupBoxAccount.controls.AddRange @{$UserPrincipal, $UserPrincipalNameTextBox}
-
-    #---------------------------------- create sub-tab account options ---------------------------
-    $groupBoxAccount.Controls.Add($groupBoxAccountOptions)
-    $ChangePasswordAtLogonBox = Create-CheckBox -Name "ChangePasswordAtLogonBox" -Title "Change Password At Logon"
-    #$EnabledCheckBox = Create-CheckBox -Name
-    $CannotChangePasswordCheckBox = Create-CheckBox -Name "CannotChangePasswordCheckBox" -Title "Cannot Change Password"
-    $EnabledCheckBox = Create-CheckBox -Name "EnabledCheckBox" -Title "Enable Account"
-
-    $groupBoxAccountOptions.controls.AddRange @{$ChangePasswordAtLogonBox, $CannotChangePasswordCheckBox, $EnabledCheckBox}
-
-#passwordsection
-$form.Controls.Add($groupBoxPassword)
-$passwordLabel = Create-Label -Content "Password"
-$passwordTextBox = Create-TextBox -Name "passwordTextBox"
-
-$groupBoxPassword.Controls.AddRange @{$passwordLabel, $passwordTextBox}
-
-
-
-#-------------------------------- edit properties -------------------------------------------------------
-
-
-
-#---------------------- create and cancel buttons -----------------------------
-$form.Controls.Add($groupBoxControls)
 #------------ control Buttons----------------------------------------
 $okButton = Create-Button -ButtonName "createUserButton" -ButtonText "Create" -ButtonDockStyle ([System.Windows.Forms.DockStyle]::Bottom) -DialogResult ([Windows.Forms.DialogResult]::OK) -ButtonAction {
-    #//TODO Actions to be performed when OK button is clicked
+    # Actions to be performed when OK button is clicked
     $form.Close()
     Write-Host "OK button clicked"
 }
 $cancelButton = Create-Button -ButtonName "cancelUserButton" -ButtonText "Cancel" -ButtonDockStyle ([System.Windows.Forms.DockStyle]::Bottom) -DialogResult ([Windows.Forms.DialogResult]::Cancel) -ButtonAction {
-    #//TODO Actions to be performed when OK button is clicked
+    # Actions to be performed when OK button is clicked
     $form.Close()
     Write-Host "Cancel button clicked"
 }
 
-$groupBoxControls.Controls.Add($okButton)
-$groupBoxControls.Controls.Add($cancelButton)
+# add buttons to form
+$form.Controls.Add($okButton)
+$form.Controls.Add($cancelButton)
 
-#---------------------- edit groupBox ---------------------------------------
-
-
-
-
-$form.Topmost = $true
-
+$result = $form.ShowDialog()
 
 if ($result -eq [System.Windows.Forms.DialogResult]::OK) {
-    #//TODO Get the user Input
     Get-StringFromTextBox -TextBox $GivenNameTextBox
 }
 elseif ($result -eq [System.Windows.Forms.DialogResult]::Cancel) {
