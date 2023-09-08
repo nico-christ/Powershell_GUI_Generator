@@ -7,58 +7,15 @@ Add-Type -AssemblyName System.Drawing
 $countryList = Import-Csv -Delimiter "," -Path C:\Scripts\user_reg\Data\country.csv
 $officeList = @("Koeln", "Hamburg", "Sonstiges")
 
+
 <#------------------------------ functions------------------------------------
 these are in the "gui_test.ps1"
 #>
-function Create-Form {
-    param (
-        [Parameter(Mandatory=$true)]
-        [String]$Title,
 
-        [Parameter(Mandatory=$true)]
-        [string]$Name,
-
-        [Parameter()]
-        [int]$Width,
-
-        [Parameter()]
-        [int]$Height,
-
-        [Parameter(Mandatory=$true)]
-        [String]$StartPosition
-    )
-
-    if ($Name -eq $null) {
-        throw "Form must have a Name"
-    }
-    elseif ($Title -eq $null) {
-        throw "The Form needs a Title."
-    }
-    
-    # Create the form
-    $Form = New-Object System.Windows.Forms.Form
-    $Form.Text = $Title
-    $Form.Name = $Name
-    $Form.StartPosition = $StartPosition
-
-    #adds the width and height if given
-    if ($Width) {
-            # Validate Width parameter
-        if ($Width -le 0) {throw "Width must be greater than 0."}
-        $Form.Width = $Width
-    }
-    if ($Height) {
-        if ($Height -le 0) {throw "Height must be greater than 0."}
-        $Form.Height = $Height
-    }
-
-    return $Form
-}
-
-function Create-GroupBox {
-    param (
-        [Parameter()]
-        [String]$Title,
+function New-GroupBox {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Title,
 
         [Parameter()]
         [int]$Width,
@@ -73,24 +30,14 @@ function Create-GroupBox {
 
     $groupBox = New-Object System.Windows.Forms.GroupBox
     $groupBox.Text = $Title
-    $groupBox.Name = "${title}_groupBox"
-
-    #adds the width and height if given
-    if ($Width) {$groupBox.Width = $Width}
-    if ($Height) {$groupBox.Height = $Height}
-
-    #adds the X-Pos and Y-Pos if given
-    if ($PosX) {$groupBox.Left = $PosX}
-    if ($PosY) {$groupBox.Top = $PosY}
+    $groupBox.Location = New-Object System.Drawing.Point($PosX, $PosY)
+    $groupBox.Size = New-Object System.Drawing.Size($Width, $Height)
 
     return $groupBox
 }
 
-function Create-Label {
-    param (
-        [Parameter(Mandatory = $true)]
-        [string]$Name,
-
+function New-Label {
+    param(
         [Parameter(Mandatory = $true)]
         [string]$Content,
 
@@ -102,28 +49,34 @@ function Create-Label {
         [Parameter()]
         [int]$PosX,
         [Parameter()]
-        [int]$PosY
+        [int]$PosY,
+
+        [Parameter()]
+        [ValidateSet('TopLeft', 'BottomLeft', 'TopRight', 'BottomRight')]
+        [string]$Alignment = 'TopLeft'
     )
 
     $label = New-Object System.Windows.Forms.Label
-    $label.Name = "${Name}Label"
     $label.Text = $Content
-    #adds the width and height if given
-    if ($Width) {$label.Width = $Width}
-    if ($Height) {$label.Height = $Height}
 
-    #adds the X-Pos and Y-Pos if given
-    if ($PosX) {$label.Left = $PosX}
-    if ($PosY) {$label.Top = $PosY}
+    $label.Location = New-Object System.Drawing.Point($PosX, $PosY)
+    if ($Width -and $Height) {$label.Size = New-Object System.Drawing.Size($Width, $Height)}
+    else {$label.AutoSize = $true}
+
+    $alignmentMap = @{
+        'TopLeft' = [System.Drawing.ContentAlignment]::TopLeft
+        'BottomLeft' = [System.Drawing.ContentAlignment]::BottomLeft
+        'TopRight' = [System.Drawing.ContentAlignment]::TopRight
+        'BottomRight' = [System.Drawing.ContentAlignment]::BottomRight
+    }
+    $label.TextAlign = $alignmentMap[$Alignment]
 
     return $label
 }
 
-function Create-TextBox {
+function New-TextBox {
     param (
-        [Parameter(Mandatory = $true)]
-        [string]$Name,
-
+        [Parameter()]
         [string]$Content,
 
         [Parameter()]
@@ -138,26 +91,48 @@ function Create-TextBox {
     )
 
     $textBox = New-Object System.Windows.Forms.TextBox
-    $textBox.Name = "${Name}TextBox"
-    $textBox.Text = $Content
-    $textBox.Font = New-Object System.Drawing.Font("Consolas",10,[System.Drawing.FontStyle]::Regular)
-    
-    #adds the width and height if given
-    if ($Width) {$textBox.Width = $Width}
-    if ($Height) {$textBox.Height = $Height}
+    $textBox.Location = New-Object System.Drawing.Point($PosX, $PosY)
+    if ($Content) {$textBox.Text = $Content}
 
-    #adds the X-Pos and Y-Pos if given
-    if ($PosX) {$textBox.Left = $PosX}
-    if ($PosY) {$textBox.Top = $PosY}
+    if ($Width -and $Height) {$textBox.Size = New-Object System.Drawing.Size($Width, $Height)}
+    else {$textBox.AutoSize = $true}
 
     return $textBox
 }
 
-function Create-CheckBox {
+function New-ComboBox {
+    param (
+        [Parameter(Mandatory=$true)]
+        [System.Collections.ArrayList]$List,
+
+        [Parameter()]
+        [int]$Width,
+        [Parameter()]
+        [int]$Height,
+
+        [Parameter()]
+        [int]$PosX,
+        [Parameter()]
+        [int]$PosY
+    )
+
+    $comboBox = New-Object System.Windows.Forms.ComboBox
+    $comboBox.Location = New-Object System.Drawing.Point($PosX, $PosY)
+
+    $comboBox.DataSource = $List
+    $comboBox.DisplayMember = "Name" #Displays only the name of the country
+
+    $comboBox.Font = New-Object System.Drawing.Font("Lucida Console",10,[System.Drawing.FontStyle]::Regular)
+
+    if ($Width -and $Height) {$comboBox.Size = New-Object System.Drawing.Size($Width, $Height)}
+    else {$comboBox.AutoSize = $true}
+
+    return $comboBox
+}
+
+function New-CheckBox {
     param (
         [Parameter(Mandatory = $true)]
-        [string]$Name,
-
         [String]$Title,
 
         [Parameter()]
@@ -172,173 +147,50 @@ function Create-CheckBox {
     )
 
     $checkBox = New-Object System.Windows.Forms.CheckBox
-    $checkBox.Name = "${Name}CheckBox"
     $checkBox.Text = $Title
 
-    #adds the width and height if given
-    if ($Width) {$checkBox.Width = $Width}
-    if ($Height) {$checkBox.Height = $Height}
+    $checkBox.Location = New-Object System.Drawing.Point($PosX, $PosY)
 
-    #adds the X-Pos and Y-Pos if given
-    if ($PosX) {$checkBox.Left = $PosX}
-    if ($PosY) {$checkBox.Top = $PosY}
+    #adds the width and height if given
+    if ($Width -and $Height) {$checkBox.Size = New-Object System.Drawing.Size($Width, $Height)}
+    else {$checkBox.AutoSize = $true}
 
     return $checkBox
 }
 
-function Create-DropdownList {
+function New-Button {
     param (
         [Parameter(Mandatory = $true)]
-        [String]$Name,
-
-        [Parameter(Mandatory = $true)]
-        [System.Windows.Forms.Form]$Form,
-
-        [Parameter(Mandatory = $true)]
-        [System.Collections.ArrayList]$List,
-
-        [Parameter()]
-        [int]$Width,
-        [Parameter()]
-        [int]$Height,
+        [string]$ButtonText,
 
         [Parameter()]
         [int]$PosX,
         [Parameter()]
         [int]$PosY
     )
-    
-    $dropdown = New-Object System.Windows.Forms.ComboBox
-    $dropdown.Name = "${Name}Dropdownlist"
-    $dropdown.DataSource = $List #uses the data from the countryList
-    $dropdown.DisplayMember = "Name"# Displays the country names
-    $dropdown.Font = New-Object System.Drawing.Font("Lucida Console",10,[System.Drawing.FontStyle]::Regular)
 
-
-    #adds the width and height if given
-    if ($Width) {$dropdown.Width = $Width}
-    if ($Height) {$dropdown.Height = $Height}
-
-    #adds the X-Pos and Y-Pos if given
-    if ($PosX) {$dropdown.Left = $PosX}
-    if ($PosY) {$dropdown.Top = $PosY}
-
-    return $dropdown
-}
-
-function Create-Button {
-    param (
-        [Parameter(Mandatory=$true)]
-        [string]$ButtonName,
-
-        [Parameter(Mandatory=$true)]
-        [string]$ButtonText,
-
-        [Parameter(Mandatory=$true)]
-        [System.Windows.Forms.DockStyle]$ButtonDockStyle,
-
-        [Parameter()]
-        [int]$Width,
-
-        [Parameter()]
-        [int]$Height,
-
-        [Parameter()]
-        [int]$PosX,
-
-        [Parameter()]
-        [int]$PosY,
-
-        # Sets the Button Dialogtype
-        [Parameter()]
-        [Windows.Forms.DialogResult]$DialogResult,
-
-        [Parameter(Mandatory=$true)]
-        [ScriptBlock]$ButtonAction
-    )
-    
     $button = New-Object System.Windows.Forms.Button
-    $button.Name = $ButtonName
     $button.Text = $ButtonText
 
-    #adds the width and height if given
-    if ($Width) {$button.Width = $Width}
-    if ($Height) {$button.Height = $Height}
+    if ($PosX -and $PosY) {$button.Location = New-Object System.Drawing.Point($PosX,$PosY)}
+    else {$button.Dock = [System.Windows.Forms.DockStyle]::Bottom}
 
-    #adds the X-Pos and Y-Pos if given
-    if ($PosX) {$button.Left = $PosX}
-    if ($PosY) {$button.Top = $PosY}
-    
-    # Set the dock style of the button
-    $button.Dock = $ButtonDockStyle
-
-    $button.DialogResult = $DialogResult
-    
-    # Add the button click event handler
-    $button.Add_Click($ButtonAction)
-    
     return $button
 }
 
-function Get-StringFromTextBox {
+function Get-Country {
     param (
-        [Parameter(Mandatory=$true)]
-        [System.Windows.Forms.TextBox]$TextBox
+        [Parameter()]
+        [string]$Country
     )
 
-    $string = $TextBoxName.Text.Trim()
-    return $string
-}
-
-function Get-BoolFromCheckBox {
-    param (
-        [Parameter(Mandatory=$true)]
-        [System.Windows.Forms.CheckBox]$CheckBox
-    )
-
-    $bool = $CheckBoxName.Checked
-    return $bool
-}
-
-function Get-StringFromComboBox {
-    param (
-        [Parameter(Mandatory=$true)]
-        [System.Windows.Forms.ComboBox]$ComboBox
-    )
-
-    $string = $ComboBoxName.Text
-    return $string
-}
-<#
-function Get-UserData {
-    param (
-        [Parameter(Mandatory=$true)]
-        [string]$ObjectName,
-        [Parameter(Mandatory=$true)]
-        [String]$ObjectType
-    )
-
-    switch ($ObjectType) {
-        'TextBox' {
-            Get-StringFromTextBox -TextBox 
-        }
-        'ComboBox' {
-            return $ObjectName.Text
-        }
-        'CheckBox' {
-            return $ObjectName.Checked
-        }
-        Default {throw "Invalid Object Type. $ObjectType"}
-    }
-}
-#>
-function Get-Country() { #//TODO Get-country fix
     try {
-        $matchingCountry = $countryList | Where-Object { $_.Country -eq $listBox.SelectedItem } # matching pair wird gesucht
+
+        $matchingCountry = $countryList | Where-Object { $_.Name -eq $Country } # matching pair wird gesucht
 
         if ($matchingCountry) {
 
-            return @{c = $matchingCountry.Alpha_2_code; co = $matchingCountry.Country}
+            return @{c = $matchingCountry.Value; co = $matchingCountry.Name}
 
         } else {
 
@@ -348,111 +200,108 @@ function Get-Country() { #//TODO Get-country fix
 
     } catch {
 
-        [System.Windows.Forms.MessageBox]::Show("Too many false attempts. Closing Script.","Error: Closing Script",[System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Error)
+        #Start-Job -ScriptBlock $SpeakToUser -ArgumentList "Kein gültiges Land"
+        Write-Host -ForegroundColor Red "There is no such country."
 
     }
+    
 }
 
-function Write-User {
-    $userProperties = {
-        #Allgemein
-            GivenName = (Get-StringFromTextBox -TextBox $GivenNameTextBox)
-            Surname = (Get-StringFromTextBox -TextBox $SurnameTextBox)
-            Initials = (Get-StringFromTextBox -TextBox $InitialsTextBox)
-            Name = (Get-StringFromTextBox -TextBox $NameTextBox)
-            DisplayName = (Get-StringFromTextBox -TextBox $DisplayNameTextBox)
-            Description = (Get-StringFromTextBox -TextBox $DescriptionTextBox)
-            Office = (Get-StringFromComboBox -ComboBox $OfficeComboBox)
-            OfficePhone = (Get-StringFromTextBox -TextBox $OfficePhoneTextBox)
-            EmailAddress = (Get-StringFromTextBox -TextBox $EmailAdressTextBox)
-            HomePage = (Get-StringFromTextBox -TextBox $HomepageTextBox)
-    
-        #Adresse
-            #StreetAddress = Get-UserData -TextBox $StreetAdressTextBox
-            #POBox = Get-UserData -TextBox $POBoxTextBox
-            #City = Get-UserData -TextBox $CityTextBox
-            #State = Get-UserData -TextBox $StateTextBox
-            #PostalCode = Get-UserData -TextBox $PostalcodeTextBox
-            #Country = $null
-    
-        #Konto
-            #UserPrincipalName = $null
-            #-notworking LockedOut = InputBool "Account Suspention?"
-    
-        #AccountOptions
-            #ChangePasswordAtLogon = Get-UserData -CheckBox $ChangePasswordAtLogonCheckBox
-            #CannotChangePassword = Get-UserData -CheckBox $CannotChangePasswordCheckBox
-            #PasswordNeverExpires = Get-UserData -CheckBox $PasswordNeverExpiresCheckBox
-            #Enabled = Get-UserData -CheckBox $EnabledCheckBox
-            #SamAccountName = 
-    
-        #password
-            #AccountPassword = ConvertTo-SecureString (Generate-Password -PasswordLength (IsInt "Enter Passwordlength")) -AsPlainText -Force
-            #Certificates = 
-    
-        #Miscellaneous
-            #Path = $null
-            #ProfilePath =
-            #Server =
+function New-Password {
+    [CmdletBinding()]
+    param (
+        [Parameter(Position = 0)]
+        [ValidateRange(6, [int]::MaxValue)]
+        [int]$Length = 6
+    )
+
+    if ($Length -lt 6) {
+        throw "Password length must be at least 6 characters."
     }
-    return $userProperties
+    elseif ($Length -gt 20) {
+        throw "Password length cannot exceed 20 characters."
+    }
+
+    #ASCII Character set for Password
+    $CharacterSet = @{
+            Uppercase   = (97..122) | Get-Random -Count $Length | % {[char]$_}
+            Lowercase   = (65..90)  | Get-Random -Count $Length | % {[char]$_}
+            Numeric     = (48..57)  | Get-Random -Count $length | % {[char]$_}
+            SpecialChar = (33..47)+(58..64)+(91..96)+(123..126) | Get-Random -Count 10 | % {[char]$_}
+    }
+
+    #Frame Random Password from given character set
+    $StringSet = $CharacterSet.Uppercase + $CharacterSet.Lowercase + $CharacterSet.Numeric + $CharacterSet.SpecialChar
+
+    $password = -join(Get-Random -Count $Length -InputObject $StringSet)
+    [System.Windows.Forms.MessageBox]::Show("Your password:`n$password`n`nPlease write it down!","Password",[System.Windows.Forms.MessageBoxButtons]::OK,[System.Windows.Forms.MessageBoxIcon]::Information)
+    
+    $securePassword = ConvertTo-SecureString -String $password -AsPlainText -Force
+    return $securePassword
 }
 
+function Set-AccountExpirationdate {
+    
+    if (!($AccountExpirationDatePicker.Checked)) {
+        return $null
+    }else {return $AccountExpirationDatePicker.Value}
+    
+}
 
 #----------------------- create form ---------------------------------------------
-$form = Create-Form -Title "New AD User" -Name "ADUserGUI" -StartPosition "Centerscreen" -Width 1000 -Height 730
-
-#------------------------- edit form -------------------------------------------------
-#$form.BackgroundImage = "C:\Share\Wallpaper\wp2132611-pepe-the-frog-wallpapers.jpg"
-#$form.FormBorderStyle = "Fixed3D"
+#$form = New-Form -Title "New AD User" -Name "ADUserGUI" -StartPosition "Centerscreen" -Width 1000 -Height 730
+$form = New-Object System.Windows.Forms.Form
+$form.Text = "New AD-User"
+$form.Size = New-Object System.Drawing.Size(1000, 730)
+$form.StartPosition = "Centerscreen"
+$form.Topmost = $true
 
 
 #---------------------- create Groupboxes ----------------------------------------
-$groupBoxGeneral = Create-GroupBox -Title "General" -Width 270 -Height 375 -PosX 20 -PosY 20 # GroupBox um den Allgemein Tab ein zugeben
-$groupBoxAddress = Create-GroupBox -Title "Address" -Width 270 -Height 210 -PosX 20 -PosY 420 # GroupBox um den Adress Tab ein zu geben
-#$groupBoxAccount = Create-GroupBox -Title "Account" -Width 400 -Height //TODO -PosX //TODO -PosY //TODO# GroupBox um den Konto Tab ein zu geben
-#$groupBoxAccountOptions = Create-GroupBox -Title "Account Options" #-Width 380 -Height //TODO -PosX //TODO -PosY //TODO# GroupBox um die Konto Optionen ein zu geben
-#$groupBoxPassword = Create-GroupBox -Title "Password" #-Width 400 -Height //TODO -PosX //TODO -PosY //TODO# GroupBox um den Passwort Tab ein zu geben
-#$groupBoxMiscellaneous = Create-GroupBox -Title "Miscellaneous" # GroupBox um Verschiedenes ein zu geben
-#$groupBoxControls = Create-GroupBox -Title "" -Width 830 -Height 30 -PosX 10 -PosY 970
+$groupBoxGeneral = New-GroupBox -Title "General" -Width 270 -Height 375 -PosX 20 -PosY 20 # GroupBox um den Allgemein Tab ein zugeben
+$groupBoxAddress = New-GroupBox -Title "Address" -Width 270 -Height 210 -PosX 20 -PosY 420 # GroupBox um den Adress Tab ein zu geben
+$groupBoxAccount = New-GroupBox -Title "Account" -Width 270 -Height 280 -PosX 315 -PosY 20 # GroupBox um den Konto Tab ein zu geben
+$groupBoxAccountOptions = New-GroupBox -Title "Account Options" -Width 250 -Height 150 -PosX 10 -PosY 70 # GroupBox um die Konto Optionen ein zu geben
+$groupBoxPassword = New-GroupBox -Title "Password" -Width 270 -Height 60 -PosX 315 -PosY 330 # GroupBox um den Passwort Tab ein zu geben
+#$groupBoxMiscellaneous = New-GroupBox -Title "Miscellaneous" # GroupBox um Verschiedenes ein zu geben
+#$groupBoxControls = New-GroupBox -Title "" -Width 830 -Height 30 -PosX 10 -PosY 970
 
 #------------------------------ create tab general -----------------------------------
-$form.Controls.Add($groupBoxGeneral)
 
-$GivenNameLabel = Create-Label -Name "GivenNameLabel" -Content "First Name" -Width 80 -Height 30 -PosX 20 -PosY 20
-$GivenNameTextBox = Create-TextBox -Name "GivenNameTextBox" -Content "Fritz" -Width 120 -Height 30 -PosX 100 -PosY 20
+$GivenNameLabel = New-Label -Content "First Name" -Width 80 -Height 30 -PosX 20 -PosY 20
+$GivenNameTextBox = New-TextBox -Content "Fritz" -Width 120 -Height 30 -PosX 100 -PosY 20
 
-$SurnameLabel = Create-Label -Name "SurnameLabel" -Content "Surname" -Width 80 -Height 30 -PosX 20 -PosY 50
-$SurnameTextBox = Create-TextBox -Name "SurnameTextBox" -Content "Meier" -Width 120 -Height 30 -PosX 100 -PosY 50
+$SurnameLabel = New-Label -Content "Surname" -Width 80 -Height 30 -PosX 20 -PosY 50
+$SurnameTextBox = New-TextBox -Content "Meier" -Width 120 -Height 30 -PosX 100 -PosY 50
 
-$InitialsLabel = Create-Label -Name "InitialsLabel" -Content "Initials" -Width 80 -Height 30 -PosX 20 -PosY 80
-$InitialsTextBox = Create-TextBox -Name "InitialsTextBox" -Content "FM" -Width 25 -Height 30 -PosX 100 -PosY 80
+$InitialsLabel = New-Label -Content "Initials" -Width 80 -Height 30 -PosX 20 -PosY 80
+$InitialsTextBox = New-TextBox -Content "FM" -Width 25 -Height 30 -PosX 100 -PosY 80
 
-$NameLabel = Create-Label -Name "NameLabel" -Content "Username" -Width 80 -Height 30 -PosX 20 -PosY 110
-$NameTextBox = Create-TextBox -Name "NameTextBox" -Content "fritzmeier" -Width 120 -Height 30 -PosX 100 -PosY 110
+$NameLabel = New-Label -Content "Username" -Width 80 -Height 30 -PosX 20 -PosY 110
+$NameTextBox = New-TextBox -Content "fritzmeier" -Width 120 -Height 30 -PosX 100 -PosY 110
 
-$DisplayNameLabel = Create-Label -Name "DisplayNameLabel" -Content "Displayname" -Width 80 -Height 30 -PosX 20 -PosY 140
-$DisplayNameTextBox = Create-TextBox -Name "DisplayNameTextBox" -Content "Fritz Meier" -Width 120 -Height 30 -PosX 100 -PosY 140
+$DisplayNameLabel = New-Label -Content "Displayname" -Width 80 -Height 30 -PosX 20 -PosY 140
+$DisplayNameTextBox = New-TextBox -Content "Fritz Meier" -Width 120 -Height 30 -PosX 100 -PosY 140
 
-$DescriptionLabel = Create-Label -Name "DescriptionLabel" -Content "Description" -Width 80 -Height 30 -PosX 20 -PosY 170
-$DescriptionTextBox = Create-TextBox -Name "DescriptionTextBox" -Content "This is a description." -PosX 100 -PosY 170
-$DescriptionTextBox.Size = New-Object System.Drawing.Size(150, 70)
+$DescriptionLabel = New-Label -Content "Description" -Width 80 -Height 30 -PosX 20 -PosY 170
+$DescriptionTextBox = New-TextBox -Content "This is a description." -Width 150 -Height 70 -PosX 100 -PosY 170
 $DescriptionTextBox.Multiline = $true
 
-$OfficeLabel = Create-Label -Name "OfficeLabel" -Content "Office" -Width 80 -Height 30 -PosX 20 -PosY 250
-$OfficeComboBox = Create-DropdownList -Name "OfficeComboBox" -List $officeList -Form $form -Width 120 -Height 30 -PosX 100 -PosY 250
+$OfficeLabel = New-Label -Content "Office" -Width 80 -Height 30 -PosX 20 -PosY 250
+$OfficeComboBox = New-ComboBox -List $officeList -Width 120 -Height 30 -PosX 100 -PosY 250
 
-$OfficePhoneLabel = Create-Label -Name "OfficePhoneLabel" -Content "Office Phone" -Width 80 -Height 30 -PosX 20 -PosY 280
-$OfficePhoneTextBox = Create-TextBox -Name "OfficePhoneTextBox" -Content "0123456789" -Width 120 -Height 30 -PosX 100 -PosY 280
+$OfficePhoneLabel = New-Label -Content "Office Phone" -Width 80 -Height 30 -PosX 20 -PosY 280
+$OfficePhoneTextBox = New-TextBox -Content "0123456789" -Width 120 -Height 30 -PosX 100 -PosY 280
 
-$EmailAdressLabel = Create-Label -Name "EmailAdressLabel" -Content "Email" -Width 80 -Height 30 -PosX 20 -PosY 310
-$EmailAdressTextBox = Create-TextBox -Name "EmailAdressTextBox" -Content "fritz.meier@soprasteria.com" -Width 150 -Height 30 -PosX 100 -PosY 310
+$EmailAdressLabel = New-Label -Content "Email" -Width 80 -Height 30 -PosX 20 -PosY 310
+$EmailAdressTextBox = New-TextBox -Content "fritz.meier@soprasteria.com" -Width 150 -Height 30 -PosX 100 -PosY 310
 $EmailAdressTextBox.Font = New-Object System.Drawing.Font("Consolas",8,[System.Drawing.FontStyle]::Regular)
 
-$HomepageLabel = Create-Label -Name "HomepageLabel" -Content "Website" -Width 80 -Height 30 -PosX 20 -PosY 340
-$HomepageTextBox = Create-TextBox -Name "HomepageTextBox" -Content "www.fritz-meier.com" -Width 150 -Height 30 -PosX 100 -PosY 340
+$HomepageLabel = New-Label -Content "Website" -Width 80 -Height 30 -PosX 20 -PosY 340
+$HomepageTextBox = New-TextBox -Content "www.fritz-meier.com" -Width 150 -Height 30 -PosX 100 -PosY 340
 $HomepageTextBox.Font = New-Object System.Drawing.Font("Consolas",8,[System.Drawing.FontStyle]::Regular)
 
+$form.Controls.Add($groupBoxGeneral)
 $groupBoxGeneral.Controls.AddRange(@(
     $GivenNameLabel,
     $GivenNameTextBox,
@@ -479,26 +328,26 @@ $groupBoxGeneral.Controls.AddRange(@(
 ))
 
 #------------------------------------ create tab address----------------------------------------------------------------------------
+
+$StreetAddressLabel = New-Label -Content "Street Address" -Width 80 -Height 30 -PosX 20 -PosY 20
+$StreetAddressTextBox = New-TextBox -Content "Musterstraße 13" -Width 150 -Height 30 -PosX 100 -PosY 20
+
+$POBoxLabel = New-Label -Content "Post Box" -Width 80 -Height 30 -PosX 20 -PosY 50
+$POBoxTextBox = New-TextBox -Content "MusterBox" -Width 120 -Height 30 -PosX 100 -PosY 50
+
+$CityLabel = New-Label -Content "City" -Width 80 -Height 30 -PosX 20 -PosY 80
+$CityTextBox = New-TextBox -Content "Koeln" -Width 120 -Height 30 -PosX 100 -PosY 80
+
+$StateLabel = New-Label -Content "State" -Width 80 -Height 30 -PosX 20 -PosY 110
+$StateTextBox = New-TextBox -Content "Nord-Rhein-Westfalen" -Width 150 -Height 30 -PosX 100 -PosY 110
+
+$PostalCodeLabel = New-Label -Content "Postal Code" -Width 80 -Height 30 -PosX 20 -PosY 140
+$PostalCodeTextBox = New-TextBox -Content "57235" -Width 120 -Height 30 -PosX 100 -PosY 140
+
+$CountryLabel = New-Label -Content "Country" -Width 80 -Height 30 -PosX 20 -PosY 170
+$CountryComboBox = New-ComboBox -List $countryList -Width 150 -Height 30 -PosX 100 -PosY 170
+
 $form.Controls.Add($groupBoxAddress)
-
-$StreetAddressLabel = Create-Label -Name "StreetAddressLabel" -Content "Street Address" -Width 80 -Height 30 -PosX 20 -PosY 20
-$StreetAddressTextBox = Create-TextBox -Name "StreetAddressTextBox" -Content "Musterstraße 13" -Width 150 -Height 30 -PosX 100 -PosY 20
-
-$POBoxLabel = Create-Label -Name "POBoxLabel" -Content "Post Box" -Width 80 -Height 30 -PosX 20 -PosY 50
-$POBoxTextBox = Create-TextBox -Name "POBoxTextBox" -Content "MusterBox" -Width 120 -Height 30 -PosX 100 -PosY 50
-
-$CityLabel = Create-Label -Name "CityLabel" -Content "City" -Width 80 -Height 30 -PosX 20 -PosY 80
-$CityTextBox = Create-TextBox -Name "CityTextBox" -Content "Koeln" -Width 120 -Height 30 -PosX 100 -PosY 80
-
-$StateLabel = Create-Label -Name "StateLabel" -Content "State" -Width 80 -Height 30 -PosX 20 -PosY 110
-$StateTextBox = Create-TextBox -Name "StateTextBox" -Content "Nord-Rhein-Westfalen" -Width 150 -Height 30 -PosX 100 -PosY 110
-
-$PostalCodeLabel = Create-Label -Name "PostalCodeLabel" -Content "Postal Code" -Width 80 -Height 30 -PosX 20 -PosY 140
-$PostalCodeTextBox = Create-TextBox -Name "PostalCodeTextBox" -Content "57235" -Width 120 -Height 30 -PosX 100 -PosY 140
-
-$CountryLabel = Create-Label -Name "CountryLabel" -Content "Country" -Width 80 -Height 30 -PosX 20 -PosY 170
-$CountryComboBox = Create-DropdownList -Name "CountryComboBox" -Form $form -List $countryList -Width 150 -Height 30 -PosX 100 -PosY 170
-
 $groupBoxAddress.Controls.AddRange( @(
     $StreetAddressLabel,
     $StreetAddressTextBox,
@@ -514,83 +363,145 @@ $groupBoxAddress.Controls.AddRange( @(
     $CountryComboBox
     ))
 
-<#---------------------------------- create tab account ------------------------------------------------------------------------------------
+#---------------------------------- create tab account ------------------------------------------------------------------------------------
 $form.Controls.Add($groupBoxAccount)
-$UserPrincipal = Create-Label -Name "UserPrincipal" -Content "Login Name Domain" #username
-$UserPrincipalNameTextBox = Create-TextBox -Name "UserPrincipalNameTextBox"
+$UserPrincipal = New-Label -Content "Login Name Domain" -Width 80 -Height 30 -PosX 20 -PosY 20 #username
+$UserPrincipalNameTextBox = New-TextBox -Content "f.meier" -Width 120 -Height 30 -PosX 100 -PosY 20
 
-$groupBoxAccount.Controls.Add($UserPrincipal)
-$groupBoxAccount.Controls.Add($UserPrincipalNameTextBox)
+#the $accountOptionGroupBox is right here
+
+$AccountExpirationDateLabel = New-Label -Content "Expiration Date" -Width 80 -Height 30 -PosX 20 -PosY 240
+# Create a date input field
+$AccountExpirationDatePicker = New-Object System.Windows.Forms.DateTimePicker
+$AccountExpirationDatePicker.Location = New-Object System.Drawing.Point(100,240)
+$AccountExpirationDatePicker.Size = New-Object System.Drawing.Size(150,30)
+$AccountExpirationDatePicker.Format = [System.Windows.Forms.DateTimePickerFormat]::Short
+$AccountExpirationDatePicker.ShowCheckBox = $true
+$AccountExpirationDatePicker.Checked = $false
+
+$groupBoxAccount.Controls.AddRange( @(
+    $UserPrincipal,
+    $UserPrincipalNameTextBox,
+    $AccountExpirationDateLabel,
+    $AccountExpirationDatePicker
+    ))
 
 #---------------------------------- create sub-tab account options ---------------------------
 $groupBoxAccount.Controls.Add($groupBoxAccountOptions)
-$ChangePasswordAtLogonCheckBox = Create-CheckBox -Name "ChangePasswordAtLogonBox" -Title "Change Password At Logon"
-$CannotChangePasswordCheckBox = Create-CheckBox -Name "CannotChangePasswordCheckBox" -Title "Cannot Change Password"
-$PasswordNeverExpiresCheckBox = Create-CheckBox -Name "PasswordNeverExpiresCheckBox" -Title "Password Never Expires"
-$EnabledCheckBox = Create-CheckBox -Name "EnabledCheckBox" -Title "Enable Account"
+$ChangePasswordAtLogonCheckBox = New-CheckBox -Title "Change Password At Logon" -Width 200 -Height 30 -PosX 20 -PosY 20
+$CannotChangePasswordCheckBox = New-CheckBox -Title "Cannot Change Password" -Width 200 -Height 30 -PosX 20 -PosY 50
+$PasswordNeverExpiresCheckBox = New-CheckBox -Title "Password Never Expires" -Width 200 -Height 30 -PosX 20 -PosY 80
+$EnabledCheckBox = New-CheckBox -Title "Enable Account" -Width 200 -Height 30 -PosX 20 -PosY 110
 
-$groupBoxAccountOptions.controls.AddRange(@(
-    $ChangePasswordAtLogonBox,
+$groupBoxAccountOptions.Controls.AddRange(@(
+    $ChangePasswordAtLogonCheckBox,
     $CannotChangePasswordCheckBox,
+    $PasswordNeverExpiresCheckBox,
     $EnabledCheckBox
     ))
 
 #passwordsection
-$form.Controls.Add($groupBoxPassword)
-$passwordLabel = Create-Label -Name "passwordLabel" -Content "Password"
-$passwordTextBox = Create-TextBox -Name "passwordTextBox"
+$passwordLabel = New-Label -Content "Passwordlength" -Width 85 -Height 30 -PosX 20 -PosY 20
 
+$passwordLengthUpDown = New-Object System.Windows.Forms.NumericUpDown
+$passwordLengthUpDown.Minimum = 6
+$passwordLengthUpDown.Maximum = 20
+$passwordLengthUpDown.Value = 8 #default Value
+$passwordLengthUpDown.Location = New-Object System.Drawing.Point(105,20)
+$passwordLengthUpDown.Size = New-Object System.Drawing.Size(50,30)
+
+$passwordButton = New-Button -ButtonText "Generate Password" -PosX 170 -PosY 20
+
+
+$form.Controls.Add($groupBoxPassword)
 $groupBoxPassword.Controls.AddRange(@(
     $passwordLabel,
-    $passwordTextBox
+    $passwordLengthUpDown,
+    $passwordButton
     ))
-#>
+
 #-------------------------------- User properties -------------------------------------------------------
 
-#>
-#$user.Initials = $user.GivenName.ToUpper()[0] + $user.Surname.ToUpper()[0]
-
-#$user.Name = $user.GivenName.ToLower()[0] + $user.Surname.ToLower() #username
-
-#$user.DisplayName = $user.GivenName + " " + $user.Surname
-
-#$user.EmailAddress = "$($user.GivenName.ToLower()).$($user.Surname.ToLower())@soprasteria.com"
-
-#$user.UserPrincipalName = $user.Name.ToString().ToLower() + "@azubi.dom" #UserLogonName
-
 #---------------------- create and cancel buttons -----------------------------
-#$form.Controls.Add($groupBoxControls)
-#------------ control Buttons----------------------------------------
-$okButton = Create-Button -ButtonName "createUserButton" -ButtonText "Create" -ButtonDockStyle ([System.Windows.Forms.DockStyle]::Bottom) -DialogResult ([Windows.Forms.DialogResult]::OK) -ButtonAction {
-    #//TODO Actions to be performed when OK button is clicked
-    $User = Write-User
-    Write-Host "User Properties:"
-    $User | Format-Table -AutoSize
-    $form.Close()
-    Write-Host "OK button clicked"
-}
-$cancelButton = Create-Button -ButtonName "cancelUserButton" -ButtonText "Cancel" -ButtonDockStyle ([System.Windows.Forms.DockStyle]::Bottom) -DialogResult ([Windows.Forms.DialogResult]::Cancel) -ButtonAction {
-    #//TODO Actions to be performed when OK button is clicked
-    $form.Close()
-    Write-Host "Cancel button clicked"
-}
+
+
+$okButton = New-Button -ButtonText "Create"
+$okButton.DialogResult = ([Windows.Forms.DialogResult]::OK)
+
+$cancelButton = New-Button -ButtonText "Cancel"
+$cancelButton.DialogResult = ([Windows.Forms.DialogResult]::Cancel)
 
 $form.Controls.Add($okButton)
 $form.Controls.Add($cancelButton)
 
 #---------------------- edit groupBox ---------------------------------------
 
+# Show the form and get user input
 
-$form.Topmost = $true
 
+# Store the user input in a variable to use later
 
-$form.ShowDialog()
+$User = [ordered]@{
+    GivenName = $GivenNameTextBox.Text
+    Surname = $SurnameTextBox.Text
+    Initials = $InitialsTextBox.Text
+    Name = $NameTextBox.Text #Username
+    DisplayName = $DisplayNameTextBox.Text
+    Description = $DescriptionTextBox.Text
+    Office = $OfficeComboBox.Text
+    OfficePhone = $OfficePhoneTextBox.Text
+    EmailAddress = $EmailAdressTextBox.Text
+    HomePage = $HomepageTextBox.Text
+
+    StreetAddress = $StreetAddressTextBox.Text
+    POBox = $POBoxTextBox.Text
+    City = $CityTextBox.Text
+    State = $StateTextBox.Text
+    PostalCode = $PostalCodeTextBox.Text
+    Country = $null
+
+    UserPrincipalName = $UserPrincipalNameTextBox.Text
+    AccountExpirationDate = $null
+
+    ChangePasswordAtLogon = $ChangePasswordAtLogonCheckBox.Checked
+    CannotChangePassword = $CannotChangePasswordCheckBox.Checked
+    PasswordNeverExpires = $PasswordNeverExpiresCheckBox.Checked
+    Enabled = $EnabledCheckBox.Checked
+
+    AccountPassword = $null
+}
+
+$passwordButton.Add_Click({
+    $User.AccountPassword = New-Password -Length $passwordLengthUpDown.Value
+})
+
+$okButton.Add_Click({
+    $User.AccountExpirationDate = Set-AccountExpirationdate
+    if ($User.AccountPassword -eq $null) {$User.AccountPassword = New-Password -Length $passwordLengthUpDown.Value}
+    [System.Windows.Forms.MessageBox]::Show("User creation '" + $User.DisplayName + "' successful.","New AD-User",0,[System.Windows.Forms.MessageBoxIcon]::Information)
+    Write-Host -f DarkCyan $OfficeComboBox.Text
+})
+
+$cancelButton.Add_Click({$form.Close()})
+
+$result = $form.ShowDialog()
 
 if ($result -eq [System.Windows.Forms.DialogResult]::OK) {
-    #//TODO Get the user Input
-    Write-Host "String from dropdown:"
+    try {
+        New-ADUser @User
+        $User
+        Write-Host -f Green $User.DisplayName "creation successful"
+    }
+    catch {Write-Host -f Red "Something went wrong. Could not create User"}
+    try {
+    $countryName = $CountryComboBox.Text
+    Set-ADUser -Identity $User.Name -Replace (Get-Country -Country $countryName)
+    }
+    catch {
+        Write-Host -f Red "Could not set Country"
+    }
 }
 elseif ($result -eq [System.Windows.Forms.DialogResult]::Cancel) {
     # Cancel button was clicked, perform necessary actions
-    Write-Host "Performing actions based on Cancel button click..."
+    Write-Host -f DarkYellow "creation canceled"
 }
