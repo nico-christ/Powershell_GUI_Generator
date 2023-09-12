@@ -2,22 +2,132 @@ Import-Module ActiveDirectory
 
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
+Add-Type -AssemblyName System.Web
 
 [System.Windows.Forms.Application]::EnableVisualStyles()
 
-#$userProperties = Import-Csv -Delimiter "," -Path C:\Scripts\user_reg\Data\userdata.csv
+
 $countryList = Import-Csv -Delimiter "," -Path C:\Scripts\user_reg\Data\country.csv
 $officeList = @("Koeln", "Hamburg", "Sonstiges")
 $driveList = [System.IO.DriveInfo]::GetDrives() | ForEach-Object { $_.Name }
 
-$AccountPasswordSec = $null
 
 
-<#------------------------------ functions------------------------------------
-these are in the "gui_test.ps1"
-#>
+#------------------------------ functions------------------------------------
+function Change-TitleBar { #Create a custom titlebar
+    param (
+        [System.Windows.Forms.Form]$form,
+        [System.Drawing.Color]$TitleBarColor,
+        [bool]$ShowMinimizeButton = $true,
+        [bool]$ShowMaximizeButton = $true,
+        [bool]$ShowCloseButton = $true
+    )
 
-function New-GroupBox {
+    #$Style = $form.FormBorderStyle
+
+    try {
+        # Remove the existing title bar
+        $form.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::None
+
+        # Create a new panel to act as the custom title bar
+        $titleBar = New-Object System.Windows.Forms.Panel
+        $titleBar.Dock = [System.Windows.Forms.DockStyle]::Top
+        $titleBar.Height = 20
+        $titleBar.BackColor = [System.Drawing.Color]::BlueViolet
+
+        # Add the title bar panel to the form
+        $form.Controls.Add($titleBar)
+
+        # Add a label to display the form title in the custom title bar
+        $lblTitle = New-Object System.Windows.Forms.Label
+        $lblTitle.Text = $form.Text
+        $lblTitle.ForeColor = [System.Drawing.Color]::White
+        $lblTitle.Font = New-Object System.Drawing.Font("Arial", 10, [System.Drawing.FontStyle]::Bold)
+        $lblTitle.AutoSize = $true
+        $lblTitle.Location = New-Object System.Drawing.Point(10, 0)
+        $titleBar.Controls.Add($lblTitle)
+
+        # Add control buttons
+        if ($ShowMinimizeButton) {
+            $MinimizeButton = New-Object System.Windows.Forms.Button
+            $MinimizeButton.Location = New-Object System.Drawing.Point(($Form.Width - 90), 0)
+            $MinimizeButton.Size = New-Object System.Drawing.Size(30, 20)
+            $MinimizeButton.Image = [System.Drawing.Image]::FromFile("C:\Share\Wallpaper\Icons\minimize.png")
+            $MinimizeButton.Font = New-Object System.Drawing.Font("Arial", 10, [System.Drawing.FontStyle]::Bold)
+            $MinimizeButton.Add_Click({$Form.WindowState = [System.Windows.Forms.FormWindowState]::Minimized})
+
+            $MinimizeButton.BackColor = [System.Drawing.Color]::WhiteSmoke
+            $MinimizeButton.ForeColor = [System.Drawing.Color]::Black
+
+            $titleBar.Controls.Add($MinimizeButton)
+        }
+
+        if ($ShowMaximizeButton) {
+            $MaximizeButton = New-Object System.Windows.Forms.Button
+            $MaximizeButton.Location = New-Object System.Drawing.Point(($Form.Width - 60), 0)
+            $MaximizeButton.Size = New-Object System.Drawing.Size(30, 20)
+            $MaximizeButton.Image = [System.Drawing.Image]::FromFile("C:\Share\Wallpaper\Icons\maximize.png")
+            $MaximizeButton.Font = New-Object System.Drawing.Font("Arial", 10, [System.Drawing.FontStyle]::Bold)
+
+            $MaximizeButton.BackColor = [System.Drawing.Color]::WhiteSmoke
+            $MaximizeButton.ForeColor = [System.Drawing.Color]::Black
+
+            $MaximizeButton.Add_Click({
+                if ($Form.WindowState -eq [System.Windows.Forms.FormWindowState]::Maximized) {
+                    $Form.WindowState = [System.Windows.Forms.FormWindowState]::Normal
+                } else {
+                    $Form.WindowState = [System.Windows.Forms.FormWindowState]::Maximized
+                }
+            })
+            $titleBar.Controls.Add($MaximizeButton)
+        }
+
+        if ($ShowCloseButton) {
+            $CloseButton = New-Object System.Windows.Forms.Button
+            $CloseButton.Location = New-Object System.Drawing.Point(($Form.Width - 30), 0)
+            $CloseButton.Size = New-Object System.Drawing.Size(30, 20)
+            $CloseButton.Image = [System.Drawing.Image]::FromFile("C:\Share\Wallpaper\Icons\close.png")
+            $CloseButton.Font = New-Object System.Drawing.Font("Arial", 10, [System.Drawing.FontStyle]::Bold)
+
+            $CloseButton.BackColor = [System.Drawing.Color]::Red
+            $CloseButton.ForeColor = [System.Drawing.Color]::White
+
+            $CloseButton.Add_Click({$Form.Close()})
+            $titleBar.Controls.Add($CloseButton)
+        }
+
+        # Add event handlers to allow moving the form when dragging the custom title bar
+        $titleBar.Add_MouseDown({
+            $form.Capture = $true
+            $form.Capture = $false
+            $Form = $this.FindForm()
+            $MouseOffset = [System.Windows.Forms.Control]::MousePosition
+        })
+
+        $titleBar.Add_MouseMove({
+            if ($form.Capture) {
+                $NewLocation = [System.Windows.Forms.Control]::MousePosition
+                $MoveOffset = $NewLocation.X - $MouseOffset.X, $NewLocation.Y - $MouseOffset.Y
+                $Form.Location = [System.Drawing.Point]::new($Form.Location.X + $MoveOffset[0], $Form.Location.Y + $MoveOffset[1])
+                $MouseOffset = $NewLocation
+            }
+        })
+
+        $titleBar.Add_MouseUp({
+            $form.Capture = $false
+        })
+
+        # Revert to the original form border style when the form is closed
+        $Form.Add_FormClosed({
+            $form.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::Fixed3D
+        })
+    }
+    catch {
+        Write-Host "An error occurred: $_"
+    }
+}
+
+function New-GroupBox { #creates anew groupbox
     param(
         [Parameter(Mandatory = $true)]
         [string]$Title,
@@ -44,6 +154,10 @@ function New-GroupBox {
     $groupBoxTitleLabel.AutoSize = $true
     $groupBoxTitleLabel.Font = New-Object System.Drawing.Font("Arial", 10, [System.Drawing.FontStyle]::Bold)
     $groupBox.Controls.Add($groupBoxTitleLabel)
+
+    #$borderPath = New-Object Drawing.Drawing2D.GraphicsPath
+    #$borderPath.AddEllipse(0, 0, $groupBox.Width, $groupBox.Height)
+    #$groupBox.Region = New-Object Drawing.Region($borderPath)
 
     return $groupBox
 }
@@ -223,7 +337,7 @@ function New-PictureBox { # Create a PictureBox for displaying the icon
     return $PictureBox
 }
 
-function Get-Country {
+function Get-Country { #gets the matching country, if it exists
     param (
         [Parameter()]
         [string]$Country
@@ -252,40 +366,32 @@ function Get-Country {
     
 }
 
-function New-Password {
+function New-Password{ #generates a new random password based on the given length
     [CmdletBinding()]
     param (
-        [Parameter(Position = 0)]
-        [ValidateRange(6, [int]::MaxValue)]
-        [int]$Length = 6
+        [Parameter(Mandatory=$True)]
+        [int]$Length
     )
+    $PassComplexCheck = $false
+    do {
+        $newPassword=[System.Web.Security.Membership]::GeneratePassword($Length,1)
+        If ( ($newPassword -cmatch "[A-Z\p{Lu}\s]") -and ($newPassword -cmatch "[a-z\p{Ll}\s]") -and ($newPassword -match "[\d]") -and ($newPassword -match "[^\w]"))
+        {
+        $PassComplexCheck=$True
+        }
+    } While ($PassComplexCheck -eq $false)
 
-    if ($Length -lt 6) {
-        throw "Password length must be at least 6 characters."
-    }
-    elseif ($Length -gt 20) {
-        throw "Password length cannot exceed 20 characters."
-    }
-
-    #ASCII Character set for Password
-    $CharacterSet = @{
-            Uppercase   = (97..122) | Get-Random -Count $Length | % {[char]$_}
-            Lowercase   = (65..90)  | Get-Random -Count $Length | % {[char]$_}
-            Numeric     = (48..57)  | Get-Random -Count $length | % {[char]$_}
-            SpecialChar = (33..47)+(58..64)+(91..96)+(123..126) | Get-Random -Count 10 | % {[char]$_}
-    }
-
-    #Frame Random Password from given character set
-    $StringSet = $CharacterSet.Uppercase + $CharacterSet.Lowercase + $CharacterSet.Numeric + $CharacterSet.SpecialChar
-
-    $password = -join(Get-Random -Count $Length -InputObject $StringSet)
-    [System.Windows.Forms.MessageBox]::Show("Your password:`n$password`n`nPlease write it down!","Password",[System.Windows.Forms.MessageBoxButtons]::OK,[System.Windows.Forms.MessageBoxIcon]::Information)
-    
-    $securePassword = ConvertTo-SecureString -String $password -AsPlainText -Force
+    $securePassword = (ConvertTo-SecureString -AsPlainText $newPassword -Force)
+    $result = [System.Windows.Forms.MessageBox]::Show("Your password:`n$newPassword`n`nPlease write it down!","Password",[System.Windows.Forms.MessageBoxButtons]::OK,[System.Windows.Forms.MessageBoxIcon]::Information)
     return $securePassword
 }
+<#
+function Show-Password {
+    $unsecurePassword = (New-Object PSCredential 0, $user.AccountPassword).GetNetworkCredential().Password
+    Write-Host $unsecurePassword
+}#>
 
-function Set-AccountExpirationdate {
+function Set-AccountExpirationdate { #sets the expiration date of an ad-account (is null if unchecked)
     
     if (!($AccountExpirationDatePicker.Checked)) {
         return $null
@@ -293,23 +399,30 @@ function Set-AccountExpirationdate {
     
 }
 
-function Show-ToolTip {
+function Show-ToolTip { #shows the Tooltip for explaining each element
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true, Position = 0)]
         [System.Windows.Forms.Control]$control,
         [string]$text = $null,
-        [int]$duration = 1000
+        [int]$duration = 2000
     )
     if ([string]::IsNullOrWhiteSpace($text)) { $text = $control.Tag }
     $pos = [System.Drawing.Point]::new($control.Right, $control.Top)
     $objectTooTip.Show($text, $form, $pos, $duration)
 }
 
+function Close-Form {
+    $result = [System.Windows.Forms.MessageBox]::Show("Do you want to close the form?`nThe progress will be lost.","Close Form",1,[System.Windows.Forms.MessageBoxIcon]::Information)
+    if ($result -eq "OK") {
+        $form.close()
+    }
+}
+
 #----------------------- create form ---------------------------------------------
-#$form = New-Form -Title "New AD User" -Name "ADUserGUI" -StartPosition "Centerscreen" -Width 1000 -Height 730
+#$form = New-Form -Title "New AD User" -StartPosition "Centerscreen" -Width 1000 -Height 730
 $form = New-Object System.Windows.Forms.Form
-$form.Text = "New AD-User"
+$form.Text = "New AD-User | $([char]0x00A9) Nico Christ"
 $form.Size = New-Object System.Drawing.Size(1000, 730)
 $form.StartPosition = "Centerscreen"
 $form.Topmost = $false
@@ -317,21 +430,25 @@ $form.BackColor = "LightBlue"
 $form.BackgroundImage = [System.Drawing.Image]::FromFile("C:\Share\Wallpaper\wp2132611-pepe-the-frog-wallpapers.jpg")
 $form.ShowIcon = $True
 $form.Icon = New-Object System.Drawing.Icon ("C:\Share\Wallpaper\Icons\user.ico")
-$form.Add_KeyDown({if ($_.KeyCode -eq "Escape") { $form.Close() } }) # if escape, exit
+$form.Add_KeyDown({if ($_.KeyCode -eq "Escape") { Close-Form } }) # if escape, exit
+$form.KeyPreview = $true
+$form.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::Fixed3D
+
+Change-TitleBar -form $form -TitleBarColor "Blue" -ShowMinimizeButton $true -ShowMaximizeButton $true -ShowCloseButton $true
 
 
 
 $objectTooTip = New-Object System.Windows.Forms.ToolTip
 
 #---------------------- create Groupboxes ----------------------------------------
-$groupBoxGeneral = New-GroupBox -Title "General" -Width 280 -Height 375 -PosX 20 -PosY 20 # GroupBox um den Allgemein Tab ein zugeben
-$groupBoxAddress = New-GroupBox -Title "Address" -Width 280 -Height 210 -PosX 20 -PosY 420 # GroupBox um den Adress Tab ein zu geben
-$groupBoxAccount = New-GroupBox -Title "Account" -Width 280 -Height 370 -PosX 325 -PosY 20 # GroupBox um den Konto Tab ein zu geben
+$groupBoxGeneral = New-GroupBox -Title "General" -Width 280 -Height 375 -PosX 20 -PosY 40 # GroupBox um den Allgemein Tab ein zugeben
+$groupBoxAddress = New-GroupBox -Title "Address" -Width 280 -Height 210 -PosX 20 -PosY 440 # GroupBox um den Adress Tab ein zu geben
+$groupBoxAccount = New-GroupBox -Title "Account" -Width 280 -Height 370 -PosX 325 -PosY 40 # GroupBox um den Konto Tab ein zu geben
 $groupBoxAccountOptions = New-GroupBox -Title "Account Options" -Width 250 -Height 250 -PosX 10 -PosY 60 # GroupBox um die Konto Optionen ein zu geben
-$groupBoxPassword = New-GroupBox -Title "Password" -Width 280 -Height 50 -PosX 325 -PosY 400 # GroupBox um den Passwort Tab ein zu geben
-$groupBoxProfile = New-GroupBox -Title "Profile" -Width 280 -Height 180 -PosX 325 -PosY 460 # GroupBox um den Passwort Tab ein zu geben
-$groupBoxPhoneNumbers = New-GroupBox -Title "Phone Numbers" -Width 280 -Height 180 -PosX 620 -PosY 20
-$groupBoxCompany = New-GroupBox -Title "Company" -Width 280 -Height 250 -PosX 620 -PosY 220
+$groupBoxPassword = New-GroupBox -Title "Password" -Width 280 -Height 50 -PosX 325 -PosY 420 # GroupBox um den Passwort Tab ein zu geben
+$groupBoxProfile = New-GroupBox -Title "Profile" -Width 280 -Height 180 -PosX 325 -PosY 480 # GroupBox um den Passwort Tab ein zu geben
+$groupBoxPhoneNumbers = New-GroupBox -Title "Phone Numbers" -Width 280 -Height 180 -PosX 620 -PosY 40
+$groupBoxCompany = New-GroupBox -Title "Company" -Width 280 -Height 250 -PosX 620 -PosY 240
 
 
 #------------------------------ create tab general -----------------------------------
@@ -684,7 +801,7 @@ $ScriptPathButton.Add_Click({
         $User.ScriptPath = $dialog.FileName
     }
 })
-$scriptPathShowLabel = New-Label -Content "No Script Selected" -Width 230 -Height 20 -PosX 20 -PosY 140
+$scriptPathShowLabel = New-Label -Content "*No Script Selected*" -Width 230 -Height 20 -PosX 20 -PosY 140
 
 $form.Controls.Add($groupBoxProfile)
 $groupBoxProfile.Controls.AddRange(@(
@@ -700,7 +817,7 @@ $groupBoxProfile.Controls.AddRange(@(
     $ScriptPathButton,
     $scriptPathShowLabel
 ))
-#-------------------------------- //TODOPhone numbers ---------------------------------------------------------
+#-------------------------------- Phone numbers ---------------------------------------------------------
 $HomePhoneLabel = New-Label -Content "Private Phonenumber" -Width 100 -Height 30 -PosX 30 -PosY 20
 $HomePhonePictueBox = New-PictureBox -Width 20 -Height 20 -PosX 14 -PosY 20
 $HomePhonePictueBox.Add_MouseEnter({ Show-ToolTip -control $this -text "Enter your private phonenumber from your house. (If you got one)"})
@@ -810,6 +927,7 @@ $ManagerSelectButton.Add_Click({
     $selectButton.Add_Click({
         $selectedUser = $userComboBox.SelectedItem
         $ManagerSelectLabel.Text = "Selected Manager: $selectedUser"
+        $User.Manager = $selectedUser
         $userDialog.Close()
         $userDialog.Dispose()
     })
@@ -860,6 +978,7 @@ $groupBoxCompany.Controls.AddRange(@(
 
 $okButton = New-Button -ButtonText "Create"
 $okButton.DialogResult = ([Windows.Forms.DialogResult]::OK)
+$okButton.TabIndex = 0
 
 $cancelButton = New-Button -ButtonText "Cancel"
 $cancelButton.DialogResult = ([Windows.Forms.DialogResult]::Cancel)
@@ -896,12 +1015,13 @@ $User = [ordered]@{
     UserPrincipalName = $UserPrincipalNameTextBox.Text
     AccountExpirationDate = $null
 
+    AccountPassword = $null
+
     ChangePasswordAtLogon = $ChangePasswordAtLogonCheckBox.Checked
     CannotChangePassword = $CannotChangePasswordCheckBox.Checked
     PasswordNeverExpires = $PasswordNeverExpiresCheckBox.Checked
-    AllowReversiblePasswordEncryptionCheckBox = $AllowReversiblePasswordEncryptionCheckBox.Checked
-    Enabled = $EnabledCheckBox.Checked
     AllowReversiblePasswordEncryption = $AllowReversiblePasswordEncryptionCheckBox.Checked
+    Enabled = $EnabledCheckBox.Checked
     SmartcardLogonRequired = $SmartcardLogonRequiredCheckBox.Checked
     AccountNotDelegated = $AccountNotDelegatedCheckBox.Checked
 
@@ -909,20 +1029,32 @@ $User = [ordered]@{
     HomeDrive = $HomeDriveComboBox.Text
     ScriptPath = $null
 
-    HomePhone = $HomepageTextBox.Text
+    HomePhone = $HomePhoneTextBox.Text
+    #Pager is created later on
     MobilePhone = $MobilePhoneTextBox.Text
     Fax = $FaxTextBox.Text
+    #IPTelephone is created later on
+
+    Company = $CompanyTextBox.Text
+    Department = $DepartmentTextBox.Text
+    Division = $DivisionTextBox.Text
+    Manager = $null
+    EmployeeID = $EmployeeIDTextBox.Text
+    EmployeeNumber = $EmployeeNumberTextBox.Text
 }
 
 $passwordButton.Add_Click({
-    $AccountPasswordSec = New-Password -Length $passwordLengthUpDown.Value
+    $User.AccountPassword = New-Password -Length $passwordLengthUpDown.Value
+    Write-Host $User.AccountPassword
 })
 
 $okButton.Add_Click({
     $User.AccountExpirationDate = Set-AccountExpirationdate
-    if ($AccountPasswordSec -eq $null) {$AccountPasswordSec = New-Password -Length $passwordLengthUpDown.Value}
-    [System.Windows.Forms.MessageBox]::Show("User creation '" + $User.DisplayName + "' successful.","New AD-User",0,[System.Windows.Forms.MessageBoxIcon]::Information)
-    Write-Host -f DarkCyan $AccountPasswordSec
+
+    if ($User.AccountPassword -eq $null) {
+        $User.AccountPassword = New-Password -Length $passwordLengthUpDown.Value
+        Write-Host -f Yellow $User.AccountPassword
+    }
 })
 
 $cancelButton.Add_Click({$form.Close()})
@@ -931,8 +1063,9 @@ $result = $form.ShowDialog()
 
 if ($result -eq [System.Windows.Forms.DialogResult]::OK) {
     try {
-        #New-ADUser @User
+        New-ADUser @User
         $User
+        [System.Windows.Forms.MessageBox]::Show("User creation '" + $User.DisplayName + "' successful.","New AD-User",0,[System.Windows.Forms.MessageBoxIcon]::Information)
         Write-Host -f Green $User.DisplayName "creation successful"
     }
     catch {Write-Host -f Red "Something went wrong. Could not create User"}
@@ -945,13 +1078,25 @@ if ($result -eq [System.Windows.Forms.DialogResult]::OK) {
         Write-Host -f Red "Could not set Country"
     }
     try {
-        Set-ADAccountPassword -Identity User.Name -Reset -NewPassword $AccountPasswordSec
+        Set-ADUser -Identity $user.Name -add @{Pager=$($PagerNumberTextBox.Text)}
+        Set-ADUser -Identity $user.Name -add @{ipPhone=$($IPTelephoneTextBox.Text)}
     }
     catch {
-        Write-Host -f Red "Could not set Password."
+        Write-Host -f Red "Could not set Pager or IPtelephone."
     }
+    if ($HomeDirectoryTextBox.Text) {
+        try {
+            Set-ADUser -Identity $User.Name -HomeDirectory $HomeDirectoryTextBox.Text -HomeDrive $HomeDriveComboBox.Text[0]
+        }
+        catch {
+            Write-Host -f Red "Could not set the Homedirectory and Homedrive."
+        }
+    }
+
+    Write-Host "Remove User $($User.Displayname)?"
+    Remove-ADUser -Identity $User.Name -Confirm
 }
 elseif ($result -eq [System.Windows.Forms.DialogResult]::Cancel) {
     # Cancel button was clicked, perform necessary actions
-    Write-Host -f DarkYellow "creation canceled"
+    Write-Host -ForegroundColor Yellow "creation canceled"
 }
