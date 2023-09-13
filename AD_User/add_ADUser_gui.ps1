@@ -17,10 +17,7 @@ $driveList = [System.IO.DriveInfo]::GetDrives() | ForEach-Object { $_.Name }
 function Change-TitleBar { #Create a custom titlebar
     param (
         [System.Windows.Forms.Form]$form,
-        [System.Drawing.Color]$TitleBarColor,
-        [bool]$ShowMinimizeButton = $true,
-        [bool]$ShowMaximizeButton = $true,
-        [bool]$ShowCloseButton = $true
+        [System.Drawing.Color]$TitleBarColor
     )
 
     #$Style = $form.FormBorderStyle
@@ -44,57 +41,57 @@ function Change-TitleBar { #Create a custom titlebar
         $lblTitle.ForeColor = [System.Drawing.Color]::White
         $lblTitle.Font = New-Object System.Drawing.Font("Arial", 10, [System.Drawing.FontStyle]::Bold)
         $lblTitle.AutoSize = $true
-        $lblTitle.Location = New-Object System.Drawing.Point(10, 0)
+        $lblTitle.Location = New-Object System.Drawing.Point(19, 2)
         $titleBar.Controls.Add($lblTitle)
 
+        $titleIcon = New-Object Windows.Forms.PictureBox
+        $titleIcon.Image = [System.Drawing.Image]::FromFile("C:\Share\Wallpaper\Icons\Usericon.png")
+        $titleIcon.Location = New-Object Drawing.Point(2, 2)
+        $titleIcon.Size = New-Object System.Drawing.Size(16, 16)
+        $titleBar.Controls.Add($titleIcon)
+
         # Add control buttons
-        if ($ShowMinimizeButton) {
-            $MinimizeButton = New-Object System.Windows.Forms.Button
-            $MinimizeButton.Location = New-Object System.Drawing.Point(($Form.Width - 90), 0)
-            $MinimizeButton.Size = New-Object System.Drawing.Size(30, 20)
-            $MinimizeButton.Image = [System.Drawing.Image]::FromFile("C:\Share\Wallpaper\Icons\minimize.png")
-            $MinimizeButton.Font = New-Object System.Drawing.Font("Arial", 10, [System.Drawing.FontStyle]::Bold)
-            $MinimizeButton.Add_Click({$Form.WindowState = [System.Windows.Forms.FormWindowState]::Minimized})
+        $MinimizeButton = New-Object System.Windows.Forms.Button
+        $MinimizeButton.Location = New-Object System.Drawing.Point(($Form.Width - 90), 0)
+        $MinimizeButton.Size = New-Object System.Drawing.Size(30, 20)
+        $MinimizeButton.Image = [System.Drawing.Image]::FromFile("C:\Share\Wallpaper\Icons\minimize.png")
+        $MinimizeButton.Font = New-Object System.Drawing.Font("Arial", 10, [System.Drawing.FontStyle]::Bold)
+        $MinimizeButton.Add_Click({$Form.WindowState = [System.Windows.Forms.FormWindowState]::Minimized})
 
-            $MinimizeButton.BackColor = [System.Drawing.Color]::WhiteSmoke
-            $MinimizeButton.ForeColor = [System.Drawing.Color]::Black
+        $MinimizeButton.BackColor = [System.Drawing.Color]::WhiteSmoke
+        $MinimizeButton.ForeColor = [System.Drawing.Color]::Black
 
-            $titleBar.Controls.Add($MinimizeButton)
-        }
+        $titleBar.Controls.Add($MinimizeButton)
 
-        if ($ShowMaximizeButton) {
-            $MaximizeButton = New-Object System.Windows.Forms.Button
-            $MaximizeButton.Location = New-Object System.Drawing.Point(($Form.Width - 60), 0)
-            $MaximizeButton.Size = New-Object System.Drawing.Size(30, 20)
-            $MaximizeButton.Image = [System.Drawing.Image]::FromFile("C:\Share\Wallpaper\Icons\maximize.png")
-            $MaximizeButton.Font = New-Object System.Drawing.Font("Arial", 10, [System.Drawing.FontStyle]::Bold)
+        $MaximizeButton = New-Object System.Windows.Forms.Button
+        $MaximizeButton.Location = New-Object System.Drawing.Point(($Form.Width - 60), 0)
+        $MaximizeButton.Size = New-Object System.Drawing.Size(30, 20)
+        $MaximizeButton.Image = [System.Drawing.Image]::FromFile("C:\Share\Wallpaper\Icons\maximize.png")
+        $MaximizeButton.Font = New-Object System.Drawing.Font("Arial", 10, [System.Drawing.FontStyle]::Bold)
 
-            $MaximizeButton.BackColor = [System.Drawing.Color]::WhiteSmoke
-            $MaximizeButton.ForeColor = [System.Drawing.Color]::Black
+        $MaximizeButton.BackColor = [System.Drawing.Color]::WhiteSmoke
+        $MaximizeButton.ForeColor = [System.Drawing.Color]::Black
 
-            $MaximizeButton.Add_Click({
-                if ($Form.WindowState -eq [System.Windows.Forms.FormWindowState]::Maximized) {
-                    $Form.WindowState = [System.Windows.Forms.FormWindowState]::Normal
-                } else {
-                    $Form.WindowState = [System.Windows.Forms.FormWindowState]::Maximized
-                }
-            })
-            $titleBar.Controls.Add($MaximizeButton)
-        }
+        $MaximizeButton.Add_Click({
+            if ($Form.WindowState -eq [System.Windows.Forms.FormWindowState]::Maximized) {
+                $Form.WindowState = [System.Windows.Forms.FormWindowState]::Normal
+            } else {
+                $Form.WindowState = [System.Windows.Forms.FormWindowState]::Maximized
+            }
+        })
+        $titleBar.Controls.Add($MaximizeButton)
 
-        if ($ShowCloseButton) {
-            $CloseButton = New-Object System.Windows.Forms.Button
-            $CloseButton.Location = New-Object System.Drawing.Point(($Form.Width - 30), 0)
-            $CloseButton.Size = New-Object System.Drawing.Size(30, 20)
-            $CloseButton.Image = [System.Drawing.Image]::FromFile("C:\Share\Wallpaper\Icons\close.png")
-            $CloseButton.Font = New-Object System.Drawing.Font("Arial", 10, [System.Drawing.FontStyle]::Bold)
+        $CloseButton = New-Object System.Windows.Forms.Button
+        $CloseButton.Location = New-Object System.Drawing.Point(($Form.Width - 30), 0)
+        $CloseButton.Size = New-Object System.Drawing.Size(30, 20)
+        $CloseButton.Image = [System.Drawing.Image]::FromFile("C:\Share\Wallpaper\Icons\close.png")
+        $CloseButton.Font = New-Object System.Drawing.Font("Arial", 10, [System.Drawing.FontStyle]::Bold)
 
-            $CloseButton.BackColor = [System.Drawing.Color]::Red
-            $CloseButton.ForeColor = [System.Drawing.Color]::White
+        $CloseButton.BackColor = [System.Drawing.Color]::Red
+        $CloseButton.ForeColor = [System.Drawing.Color]::White
 
-            $CloseButton.Add_Click({$Form.Close()})
-            $titleBar.Controls.Add($CloseButton)
-        }
+        $CloseButton.Add_Click({$Form.Close()})
+        $titleBar.Controls.Add($CloseButton)
 
         # Add event handlers to allow moving the form when dragging the custom title bar
         $titleBar.Add_MouseDown({
@@ -337,6 +334,46 @@ function New-PictureBox { # Create a PictureBox for displaying the icon
     return $PictureBox
 }
 
+function Is-String {
+    param (
+        [Parameter()]
+        [String]$textInput,
+        [Parameter()]
+        [System.Windows.Forms.TextBox]$TextBox
+    )
+    $selectionStart = $TextBox.SelectionStart
+    $selectionStart += 1 #plus 1 because we replace 1 char with 2 chars and want the curser to be at the end of the textbox
+
+    $trimInput = $textInput.Trim()
+    if ($trimInput -match "\d") {
+        $result = [System.Windows.Forms.MessageBox]::Show("Invalid input. No numbers, only letters allowed.", "Invalid Input", [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Warning)
+    } else {
+        $cleanInput = NoForbiddenCharacter -VorbidChar $textInput
+    }#>
+    $TextBox.Text = $cleanInput
+    $TextBox.SelectionStart = $selectionStart
+}
+
+function Is-Int {
+    param (
+        [Parameter()]
+        [String]$intInput
+    )
+
+    $trimInput = $intInput.Trim()
+    if ($trimInput -match "[a-zA-Z]") {
+        $result = [System.Windows.Forms.MessageBox]::Show("Invalid input. No letters, only numbers allowed.", "Invalid Input", [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Warning)
+    }
+}
+
+function NoForbiddenCharacter {
+    param ([string]$VorbidChar)
+
+    $NoVorbidChar = $VorbidChar -creplace 'ä', 'ae' -creplace 'Ä', 'Ae' -creplace 'ö', 'oe'  -creplace 'Ö', 'Oe' -creplace 'ü', 'ue' -creplace 'Ü', 'Ue' -replace 'ß', 'ss'
+    
+    return $NoVorbidChar
+}
+
 function Get-Country { #gets the matching country, if it exists
     param (
         [Parameter()]
@@ -438,6 +475,7 @@ Change-TitleBar -form $form -TitleBarColor "Blue" -ShowMinimizeButton $true -Sho
 
 
 
+
 $objectTooTip = New-Object System.Windows.Forms.ToolTip
 
 #---------------------- create Groupboxes ----------------------------------------
@@ -460,6 +498,7 @@ $GivennamePictueBox.Add_MouseLeave({ $objectTooTip.Hide($this) })
 
 $GivenNameTextBox = New-TextBox -Content "Fritz" -Width 120 -Height 30 -PosX 110 -PosY 20
 $GivenNameTextBox.Add_TextChanged({
+    Is-String -textInput $GivenNameTextBox.Text -TextBox $GivenNameTextBox
     $InitialsTextBox.Text = ($GivenNameTextBox.Text)[0]+($SurnameTextBox.Text)[0]
     $NameTextBox.Text = (($GivenNameTextBox.Text)[0] + $SurnameTextBox.Text).ToLower()
     $DisplayNameTextBox.Text = $GivenNameTextBox.Text + " " + $SurnameTextBox.Text
@@ -473,6 +512,7 @@ $SurnamePictueBox.Add_MouseLeave({ $objectTooTip.Hide($this) })
 
 $SurnameTextBox = New-TextBox -Content "Meier" -Width 120 -Height 30 -PosX 110 -PosY 50
 $SurnameTextBox.Add_TextChanged({
+    Is-String -textInput $SurnameTextBox.Text -TextBox $SurnameTextBox
     $InitialsTextBox.Text = ($GivenNameTextBox.Text)[0]+($SurnameTextBox.Text)[0]
     $NameTextBox.Text = $GivenNameTextBox.Text.ToLower()[0] + $SurnameTextBox.Text.ToLower()
     $DisplayNameTextBox.Text = $GivenNameTextBox.Text + " " + $SurnameTextBox.Text
@@ -485,6 +525,10 @@ $InitialsPictueBox.Add_MouseEnter({ Show-ToolTip -control $this -text "First let
 $InitialsPictueBox.Add_MouseLeave({ $objectTooTip.Hide($this) })
 
 $InitialsTextBox = New-TextBox -Content "FM" -Width 25 -Height 30 -PosX 110 -PosY 80
+$InitialsTextBox.Add_TextChanged({
+    Is-String -textInput $InitialsTextBox.Text -TextBox $InitialsTextBox
+    if ($InitialsTextBox.Text.length -gt 2) {[System.Windows.Forms.MessageBox]::Show("Invalid input. Max char lenght reached. Initials can only be 2 char.", "Invalid Input", [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Warning)}
+})
 
 $NameLabel = New-Label -Content "Username" -Width 80 -Height 30 -PosX 30 -PosY 110
 $NamePictueBox = New-PictureBox -Width 20 -Height 20 -PosX 14 -PosY 110
@@ -493,6 +537,7 @@ $NamePictueBox.Add_MouseLeave({ $objectTooTip.Hide($this) })
 
 $NameTextBox = New-TextBox -Content "fritzmeier" -Width 120 -Height 30 -PosX 110 -PosY 110
 $NameTextBox.Add_TextChanged({
+    Is-String -textInput $NameTextBox.Text -TextBox $NameTextBox
     $UserPrincipalNameTextBox.Text = $NameTextBox.Text.ToLower() + "@azubi.dom"
 })
 
@@ -502,6 +547,9 @@ $DisplayNamePictueBox.Add_MouseEnter({ Show-ToolTip -control $this -text "This n
 $DisplayNamePictueBox.Add_MouseLeave({ $objectTooTip.Hide($this) })
 
 $DisplayNameTextBox = New-TextBox -Content "Fritz Meier" -Width 120 -Height 30 -PosX 110 -PosY 140
+$DisplayNameTextBox.Add_TextChanged({
+    Is-String -textInput $DisplayNameTextBox.Text -TextBox $DisplayNameTextBox
+})
 
 $DescriptionLabel = New-Label -Content "Description" -Width 80 -Height 30 -PosX 30 -PosY 170
 $DescriptionPictueBox = New-PictureBox -Width 20 -Height 20 -PosX 14 -PosY 170
@@ -524,6 +572,9 @@ $OfficePhonePictueBox.Add_MouseEnter({ Show-ToolTip -control $this -text "Enter 
 $OfficePhonePictueBox.Add_MouseLeave({ $objectTooTip.Hide($this) })
 
 $OfficePhoneTextBox = New-TextBox -Content "0123456789" -Width 120 -Height 30 -PosX 110 -PosY 280
+$OfficePhoneTextBox.Add_TextChanged({
+    Is-Int -intInput $OfficePhoneTextBox.Text
+})
 
 $EmailAdressLabel = New-Label -Content "Email" -Width 80 -Height 30 -PosX 30 -PosY 310
 $EmailAdressPictueBox = New-PictureBox -Width 20 -Height 20 -PosX 14 -PosY 310
@@ -597,6 +648,9 @@ $CityPictueBox.Add_MouseEnter({ Show-ToolTip -control $this -text "Just enter yo
 $CityPictueBox.Add_MouseLeave({ $objectTooTip.Hide($this) })
 
 $CityTextBox = New-TextBox -Content "Koeln" -Width 120 -Height 30 -PosX 110 -PosY 80
+$CityTextBox.Add_TextChanged({
+    Is-String -textInput $CityTextBox.Text -TextBox $CityTextBox
+})
 
 $StateLabel = New-Label -Content "State" -Width 80 -Height 30 -PosX 30 -PosY 110
 $StatePictueBox = New-PictureBox -Width 20 -Height 20 -PosX 14 -PosY 110
@@ -604,6 +658,9 @@ $StatePictueBox.Add_MouseEnter({ Show-ToolTip -control $this -text "Enter the st
 $StatePictueBox.Add_MouseLeave({ $objectTooTip.Hide($this) })
 
 $StateTextBox = New-TextBox -Content "Nord-Rhein-Westfalen" -Width 150 -Height 30 -PosX 110 -PosY 110
+$StateTextBox.Add_TextChanged({
+    Is-String -textInput $StateTextBox.Text -TextBox $StateTextBox
+})
 
 $PostalCodeLabel = New-Label -Content "Postal Code" -Width 80 -Height 30 -PosX 30 -PosY 140
 $PostalCodePictueBox = New-PictureBox -Width 20 -Height 20 -PosX 14 -PosY 140
@@ -611,6 +668,20 @@ $PostalCodePictueBox.Add_MouseEnter({ Show-ToolTip -control $this -text "Enter t
 $PostalCodePictueBox.Add_MouseLeave({ $objectTooTip.Hide($this) })
 
 $PostalCodeTextBox = New-TextBox -Content "57235" -Width 120 -Height 30 -PosX 110 -PosY 140
+$PostalCodeTextBox.Add_KeyDown({
+    $key = $_.KeyCode
+    $text = $PostalCodeTextBox.Text
+    if ($text.Length -ge 5 -and $key -ne [System.Windows.Forms.Keys]::Back) {
+        [System.Windows.Forms.MessageBox]::Show("Invalid input. Max Numbers reched.`nPostcode are only 5 digits", "Invalid Input", [System.Windows.Forms.MessageBoxButtons]::OK, [System.Windows.Forms.MessageBoxIcon]::Warning)
+        $selectionStart = $PostalCodeTextBox.SelectionStart
+        $PostalCodeTextBox.Text = $text.Substring(0, 5)
+        $PostalCodeTextBox.SelectionStart = $selectionStart
+
+    }
+})
+$PostalCodeTextBox.Add_TextChanged({
+    Is-Int -intInput $PostalCodeTextBox.Text
+})
 
 $CountryLabel = New-Label -Content "Country" -Width 80 -Height 30 -PosX 30 -PosY 170
 $CountryPictueBox = New-PictureBox -Width 20 -Height 20 -PosX 14 -PosY 170
@@ -649,6 +720,9 @@ $UserPrincipalPictueBox.Add_MouseEnter({ Show-ToolTip -control $this -text "Sele
 $UserPrincipalPictueBox.Add_MouseLeave({ $objectTooTip.Hide($this) })
 
 $UserPrincipalNameTextBox = New-TextBox -Content "f.meier" -Width 120 -Height 30 -PosX 110 -PosY 20
+$UserPrincipalNameTextBox.Add_TextChanged({
+    Is-String -textInput $UserPrincipalNameTextBox.Text -TextBox $UserPrincipalNameTextBox
+})
 
 #the $accountOptionGroupBox is right here
 
@@ -824,6 +898,9 @@ $HomePhonePictueBox.Add_MouseEnter({ Show-ToolTip -control $this -text "Enter yo
 $HomePhonePictueBox.Add_MouseLeave({ $objectTooTip.Hide($this) })
 
 $HomePhoneTextBox = New-TextBox -Content "01254673" -Width 120 -Height 30 -PosX 130 -PosY 20
+$HomePhoneTextBox.Add_TextChanged({
+    Is-Int -intInput $HomePhoneTextBox.Text
+})
 
 $PagerNumberLabel = New-Label -Content "Pager Number" -Width 80 -Height 30 -PosX 30 -PosY 50
 $PagerNumberPictueBox = New-PictureBox -Width 20 -Height 20 -PosX 14 -PosY 50
@@ -831,6 +908,9 @@ $PagerNumberPictueBox.Add_MouseEnter({ Show-ToolTip -control $this -text "Enter 
 $PagerNumberPictueBox.Add_MouseLeave({ $objectTooTip.Hide($this) })
 
 $PagerNumberTextBox = New-TextBox -Content "034578" -Width 120 -Height 30 -PosX 130 -PosY 50
+$PagerNumberTextBox.Add_TextChanged({
+    Is-Int -intInput $PagerNumberTextBox.Text
+})
 
 
 $MobilePhoneLabel = New-Label -Content "Mobil Phone" -Width 80 -Height 30 -PosX 30 -PosY 80
@@ -839,6 +919,9 @@ $MobilePhonePictueBox.Add_MouseEnter({ Show-ToolTip -control $this -text "Enter 
 $MobilePhonePictueBox.Add_MouseLeave({ $objectTooTip.Hide($this) })
 
 $MobilePhoneTextBox = New-TextBox -Content "037586235" -Width 120 -Height 30 -PosX 130 -PosY 80
+$MobilePhoneTextBox.Add_TextChanged({
+    Is-Int -intInput $MobilePhoneTextBox.Text
+})
 
 $FaxLabel = New-Label -Content "Fax" -Width 80 -Height 30 -PosX 30 -PosY 110
 $FaxPictueBox = New-PictureBox -Width 20 -Height 20 -PosX 14 -PosY 110
@@ -846,6 +929,9 @@ $FaxPictueBox.Add_MouseEnter({ Show-ToolTip -control $this -text "Enter the numb
 $FaxPictueBox.Add_MouseLeave({ $objectTooTip.Hide($this) })
 
 $FaxTextBox = New-TextBox -Content "012653" -Width 120 -Height 30 -PosX 130 -PosY 110
+$FaxTextBox.Add_TextChanged({
+    Is-Int -intInput $FaxTextBox.Text
+})
 
 $IPTelephoneLabel = New-Label -Content "IP Telephone" -Width 80 -Height 30 -PosX 30 -PosY 140
 $IPTelephonePictueBox = New-PictureBox -Width 20 -Height 20 -PosX 14 -PosY 140
@@ -853,6 +939,10 @@ $IPTelephonePictueBox.Add_MouseEnter({ Show-ToolTip -control $this -text "Enter 
 $IPTelephonePictueBox.Add_MouseLeave({ $objectTooTip.Hide($this) })
 
 $IPTelephoneTextBox = New-TextBox -Content "0896983" -Width 120 -Height 30 -PosX 130 -PosY 140
+$IPTelephoneTextBox.Add_TextChanged({
+    Is-Int -intInput $IPTelephoneTextBox.Text
+})
+
 
 $form.Controls.Add($groupBoxPhoneNumbers)
 $groupBoxPhoneNumbers.Controls.AddRange(@(
@@ -879,6 +969,9 @@ $CompanyPictueBox.Add_MouseEnter({ Show-ToolTip -control $this -text "Enter the 
 $CompanyPictueBox.Add_MouseLeave({ $objectTooTip.Hide($this) })
 
 $CompanyTextBox = New-TextBox -Content "Sopra Steria" -Width 120 -Height 30 -PosX 110 -PosY 20
+$CompanyTextBox.Add_TextChanged({
+    Is-String -textInput $CompanyTextBox.Text -TextBox $CompanyTextBox
+})
 
 $DepartmentLabel = New-Label -Content "Department" -Width 80 -Height 30 -PosX 30 -PosY 50 #Abteilung
 $DepartmentPictueBox = New-PictureBox -Width 20 -Height 20 -PosX 14 -PosY 50
@@ -886,6 +979,9 @@ $DepartmentPictueBox.Add_MouseEnter({ Show-ToolTip -control $this -text "Enter t
 $DepartmentPictueBox.Add_MouseLeave({ $objectTooTip.Hide($this) })
 
 $DepartmentTextBox = New-TextBox -Content "MACS" -Width 120 -Height 30 -PosX 110 -PosY 50
+$DepartmentTextBox.Add_TextChanged({
+    Is-String -textInput $DepartmentTextBox.Text -TextBox $DepartmentTextBox
+})
 
 $DivisionLabel = New-Label -Content "Division" -Width 80 -Height 30 -PosX 30 -PosY 80
 $DivisionPictueBox = New-PictureBox -Width 20 -Height 20 -PosX 14 -PosY 80
@@ -893,7 +989,10 @@ $DivisionPictueBox.Add_MouseEnter({ Show-ToolTip -control $this -text "Enter the
 $DivisionPictueBox.Add_MouseLeave({ $objectTooTip.Hide($this) })
 
 $DivisionTextBox = New-TextBox -Content "Division?" -Width 120 -Height 30 -PosX 110 -PosY 80
-#
+$DivisionTextBox.Add_TextChanged({
+    Is-String -textInput $DivisionTextBox.Text -TextBox $DivisionTextBox
+})
+
 $ManagerLabel = New-Label -Content "Manager" -Width 80 -Height 30 -PosX 30 -PosY 110
 $ManagerPictueBox = New-PictureBox -Width 20 -Height 20 -PosX 14 -PosY 110
 $ManagerPictueBox.Add_MouseEnter({ Show-ToolTip -control $this -text "Enter your manager / boss you are working for."})
@@ -950,6 +1049,9 @@ $EmployeeNumberPictueBox.Add_MouseEnter({ Show-ToolTip -control $this -text "Ent
 $EmployeeNumberPictueBox.Add_MouseLeave({ $objectTooTip.Hide($this) })
 
 $EmployeeNumberTextBox = New-TextBox -Content "423" -Width 120 -Height 30 -PosX 130 -PosY 200
+$EmployeeNumberTextBox.Add_TextChanged({
+    Is-Int -intInput $EmployeeNumberTextBox.Text
+})
 
 $form.Controls.Add($groupBoxCompany)
 $groupBoxCompany.Controls.AddRange(@(
@@ -998,7 +1100,7 @@ $User = [ordered]@{
     Surname = $SurnameTextBox.Text
     Initials = $InitialsTextBox.Text
     Name = $NameTextBox.Text #Username
-    DisplayName = $DisplayNameTextBox.Text
+    displayName = $DisplayNameTextBox.Text
     Description = $DescriptionTextBox.Text
     Office = $OfficeComboBox.Text
     OfficePhone = $OfficePhoneTextBox.Text
